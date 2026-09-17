@@ -1,0 +1,288 @@
+'use client';
+
+import { useState } from 'react';
+
+export default function HomePage() {
+  const [form, setForm] = useState({ fullName: '', phone: '', age: '', email: '', course: 'python', plan: 'free' });
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  function update(key, value) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function selectPlan(course, plan) {
+    setForm((f) => ({ ...f, course, plan }));
+    document.getElementById('royxat')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Xatolik yuz berdi');
+      setStatus({ type: 'ok', text: "Ro'yxatdan muvaffaqiyatli o'tdingiz! Tez orada bog'lanamiz." });
+      setForm({ fullName: '', phone: '', age: '', email: '', course: 'python', plan: 'free' });
+    } catch (err) {
+      setStatus({ type: 'err', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <nav className="navbar">
+        <div className="container">
+          <div className="brand">🐍 CodeGuard<span className="dot">.</span></div>
+          <div className="nav-links">
+            <a href="#kurslar">Kurslar</a>
+            <a href="#xizmatlar">Xizmatlar</a>
+            <a href="#tolov">Tariflar</a>
+            <a href="#instagram">Instagram</a>
+            <a href="/account">Kabinet</a>
+          </div>
+          <a href="#royxat" className="nav-cta">Ro'yxatdan o'tish</a>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero">
+        <div className="container">
+          <div className="badge-pill">🚀 Yangi guruhlar har oy ochiladi</div>
+          <h1>Python va <span>sun'iy intellekt</span>ni noldan amaliy o'rganing</h1>
+          <p className="lead">
+            CodeGuard akademiyasida siz loyihalar orqali Python dasturlash tilini
+            va zamonaviy AI vositalarini o'rganasiz. Birinchi dars — bepul.
+          </p>
+          <div className="hero-actions">
+            <a href="#royxat" className="btn btn-primary">Bepul darsga yozilish</a>
+            <a href="#kurslar" className="btn btn-outline">Kurslarni ko'rish</a>
+          </div>
+        </div>
+      </section>
+
+      {/* COURSES */}
+      <section className="section" id="kurslar">
+        <div className="container">
+          <div className="section-head">
+            <div className="kicker">Kurslar</div>
+            <h2>Sizga mos yo'nalishni tanlang</h2>
+            <p>Har bir kurs amaliy loyihalar va shaxsiy murabbiy yordami bilan olib boriladi.</p>
+          </div>
+          <div className="grid grid-3">
+            <div className="card highlight">
+              <span className="free-tag">BEPUL</span>
+              <div className="icon">🤖</div>
+              <h3>Sun'iy intellekt — kirish darsi</h3>
+              <p>AI qanday ishlaydi, ChatGPT/Claude kabi vositalardan qanday foydalanish — bir martalik bepul dars.</p>
+              <div style={{ marginTop: 16 }}>
+                <button className="btn btn-primary btn-full" onClick={() => selectPlan('ai', 'free')}>
+                  Bepul yozilish
+                </button>
+              </div>
+            </div>
+            <div className="card">
+              <div className="icon">🐍</div>
+              <h3>Python — Boshlang'ich</h3>
+              <p>Sintaksis, o'zgaruvchilar, tsikllar, funksiyalar — noldan mustahkam bazaviy bilim.</p>
+              <div style={{ marginTop: 16 }}>
+                <button className="btn btn-outline btn-full" onClick={() => selectPlan('python', 'basic')}>
+                  Kursga yozilish
+                </button>
+              </div>
+            </div>
+            <div className="card">
+              <div className="icon">⚙️</div>
+              <h3>Python — Amaliy loyihalar</h3>
+              <p>Web, ma'lumotlar tahlili va kichik AI loyihalari orqali portfolio yaratish.</p>
+              <div style={{ marginTop: 16 }}>
+                <button className="btn btn-outline btn-full" onClick={() => selectPlan('python', 'pro')}>
+                  Kursga yozilish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section className="section" id="xizmatlar" style={{ background: 'var(--bg-alt)' }}>
+        <div className="container">
+          <div className="section-head">
+            <div className="kicker">Xizmatlar</div>
+            <h2>Nima taklif qilamiz</h2>
+          </div>
+          <div className="grid grid-3">
+            <div className="card">
+              <div className="icon">🧑‍🏫</div>
+              <h3>Jonli darslar</h3>
+              <p>Onlayn va guruh darslari orqali interaktiv o'qitish.</p>
+            </div>
+            <div className="card">
+              <div className="icon">📁</div>
+              <h3>Amaliy loyihalar</h3>
+              <p>Har bir modul oxirida real loyiha ustida ishlaysiz.</p>
+            </div>
+            <div className="card">
+              <div className="icon">🎓</div>
+              <h3>Sertifikat</h3>
+              <p>Kursni tugatgach rasmiy CodeGuard sertifikati beriladi.</p>
+            </div>
+            <div className="card">
+              <div className="icon">💬</div>
+              <h3>Mentor yordami</h3>
+              <p>Savollaringizga shaxsiy murabbiydan tezkor javob olasiz.</p>
+            </div>
+            <div className="card">
+              <div className="icon">📊</div>
+              <h3>Progress kuzatuvi</h3>
+              <p>Shaxsiy kabinetingizda o'z natijalaringizni kuzatib borasiz.</p>
+            </div>
+            <div className="card">
+              <div className="icon">🤝</div>
+              <h3>Ish bilan ta'minlash</h3>
+              <p>Eng yaxshi bitiruvchilarni hamkor kompaniyalarga tavsiya qilamiz.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING / TO'LOV */}
+      <section className="section" id="tolov">
+        <div className="container">
+          <div className="section-head">
+            <div className="kicker">Tariflar</div>
+            <h2>O'zingizga mos rejani tanlang</h2>
+            <p>To'lov usullari haqida ro'yxatdan o'tgach murabbiylarimiz siz bilan bog'lanadi.</p>
+          </div>
+          <div className="grid grid-3">
+            <div className="card price-card">
+              <h3>Bepul dars</h3>
+              <div className="price">0 so'm</div>
+              <ul>
+                <li>1 martalik AI kirish darsi</li>
+                <li>Onlayn formatda</li>
+                <li>Sertifikatsiz</li>
+              </ul>
+              <button className="btn btn-outline btn-full" onClick={() => selectPlan('ai', 'free')}>
+                Tanlash
+              </button>
+            </div>
+            <div className="card price-card popular">
+              <h3>Boshlang'ich</h3>
+              <div className="price">490 000 <small>so'm / oy</small></div>
+              <ul>
+                <li>Python asoslari — 8 hafta</li>
+                <li>Haftada 3 dars</li>
+                <li>Mentor yordami</li>
+                <li>Sertifikat</li>
+              </ul>
+              <button className="btn btn-primary btn-full" onClick={() => selectPlan('python', 'basic')}>
+                Tanlash
+              </button>
+            </div>
+            <div className="card price-card">
+              <h3>Pro</h3>
+              <div className="price">790 000 <small>so'm / oy</small></div>
+              <ul>
+                <li>Amaliy loyihalar — 12 hafta</li>
+                <li>Portfolio yaratish</li>
+                <li>Shaxsiy mentor</li>
+                <li>Ish bilan ta'minlashda yordam</li>
+              </ul>
+              <button className="btn btn-outline btn-full" onClick={() => selectPlan('python', 'pro')}>
+                Tanlash
+              </button>
+            </div>
+          </div>
+          <p style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13.5, marginTop: 24 }}>
+            To'lov: ro'yxatdan o'tgach, Click/Payme orqali to'lov havolasi yuboriladi.
+          </p>
+        </div>
+      </section>
+
+      {/* REGISTRATION FORM */}
+      <section className="section" id="royxat" style={{ background: 'var(--bg-alt)' }}>
+        <div className="container">
+          <div className="section-head">
+            <div className="kicker">Ro'yxatdan o'tish</div>
+            <h2>Ma'lumotlaringizni qoldiring</h2>
+            <p>Ism, telefon raqam, yosh va email orqali ro'yxatdan o'ting — murabbiylarimiz siz bilan bog'lanadi.</p>
+          </div>
+          <form className="form-shell" onSubmit={submit}>
+            <div className="field">
+              <label>Ism va familiya</label>
+              <input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} required />
+            </div>
+            <div className="field">
+              <label>Telefon raqam</label>
+              <input
+                placeholder="+998 90 123 45 67"
+                value={form.phone}
+                onChange={(e) => update('phone', e.target.value)}
+                required
+              />
+            </div>
+            <div className="field">
+              <label>Yosh</label>
+              <input type="number" min="5" max="100" value={form.age} onChange={(e) => update('age', e.target.value)} required />
+            </div>
+            <div className="field">
+              <label>Email manzil</label>
+              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} required />
+            </div>
+            <div className="field">
+              <label>Kurs</label>
+              <select value={form.course} onChange={(e) => update('course', e.target.value)}>
+                <option value="ai">Sun'iy intellekt (bepul dars)</option>
+                <option value="python">Python</option>
+              </select>
+            </div>
+            <button className="btn btn-primary btn-full" disabled={loading}>
+              {loading ? 'Yuborilmoqda...' : "Ro'yxatdan o'tish"}
+            </button>
+            {status && <div className={`status-msg ${status.type === 'ok' ? 'ok' : 'err'}`}>{status.text}</div>}
+          </form>
+        </div>
+      </section>
+
+      {/* INSTAGRAM */}
+      <section className="section" id="instagram">
+        <div className="container" style={{ textAlign: 'center' }}>
+          <div className="section-head">
+            <div className="kicker">Bizni kuzatib boring</div>
+            <h2>Instagram sahifamizga obuna bo'ling</h2>
+            <p>Yangiliklar, bepul darslar va talabalar ishlari — barchasi Instagramda.</p>
+          </div>
+          <div className="qr-box">
+            <img src="/api/qrcode" alt="Instagram QR" width={200} height={200} />
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <a
+              className="btn btn-primary"
+              href="https://instagram.com/code_guard_"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Instagram profiliga o'tish
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <footer className="site-footer">
+        <div className="container">
+          © {new Date().getFullYear()} CodeGuard Academy. Barcha huquqlar himoyalangan.
+        </div>
+      </footer>
+    </>
+  );
+}
