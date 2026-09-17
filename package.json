@@ -1,5 +1,6 @@
 {
   "name": "codeguard-academy",
+  "engines": { "node": "20.x" },
   "version": "1.0.0",
   "private": true,
   "description": "CodeGuard — Python/AI courses landing site with registration, admin panel, and user account lookup.",
