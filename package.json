@@ -1,6 +1,5 @@
 {
   "name": "codeguard-academy",
-  "engines": { "node": "20.x" },
   "version": "1.0.0",
   "private": true,
   "description": "CodeGuard — Python/AI courses landing site with registration, admin panel, and user account lookup.",
@@ -10,7 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "14.2.35",
+    "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "better-sqlite3": "11.1.2",
