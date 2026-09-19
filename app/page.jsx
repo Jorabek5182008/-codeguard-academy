@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const SERVICE_DETAILS = {
   live: {
@@ -35,11 +35,162 @@ const SERVICE_DETAILS = {
   },
 };
 
+const ONBOARD_KEY = 'codeguard_onboarded';
+const THEME_KEY = 'codeguard_theme';
+
+function validateRegistration(f) {
+  if (!f.fullName || f.fullName.trim().length < 2) return "Ism-familiyani to'liq kiriting.";
+  if (!/^[+\d][\d\s-]{6,16}$/.test(f.phone || '')) return "Telefon raqamini to'g'ri kiriting.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email || '')) return "Email manzilini to'g'ri kiriting.";
+  if (!f.age || f.age < 5 || f.age > 100) return "Yoshni to'g'ri kiriting.";
+  if (!/^\d{4}$/.test(f.accessCode || '')) return "Kirish kodi 4 ta raqamdan iborat bo'lishi kerak.";
+  return null;
+}
+
+function Onboarding({ onComplete }) {
+  const [step, setStep] = useState('register'); // register | social
+  const [form, setForm] = useState({ fullName: '', phone: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  function update(key, value) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function submitRegistration(e) {
+    e.preventDefault();
+    const validationError = validateRegistration(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Xatolik yuz berdi');
+      setStep('social');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function finish() {
+    try {
+      localStorage.setItem(ONBOARD_KEY, '1');
+    } catch {
+      // ignore
+    }
+    onComplete();
+  }
+
+  return (
+    <div className="page onboard-page">
+      <div className="card" style={{ maxWidth: 440 }}>
+        <div className="logo-emoji">🐍</div>
+        <div className="university-name">CodeGuard Academy</div>
+
+        {step === 'register' && (
+          <>
+            <h1 className="title">Boshlash uchun ro'yxatdan o'ting</h1>
+            <p className="subtitle">Ism, telefon, yosh, email va o'zingiz tanlagan 4 xonali kirish kodini kiriting.</p>
+            <form onSubmit={submitRegistration} noValidate>
+              <div className="field">
+                <label>Ism va familiya</label>
+                <input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Telefon raqam</label>
+                <input placeholder="+998 90 123 45 67" value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Yosh</label>
+                <input type="number" value={form.age} onChange={(e) => update('age', e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Email manzil</label>
+                <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Kirish kodi (4 raqam) — kabinetga kirish uchun kerak bo'ladi</label>
+                <input
+                  value={form.accessCode}
+                  onChange={(e) => update('accessCode', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  inputMode="numeric"
+                  maxLength={4}
+                />
+              </div>
+              <button className="btn btn-primary btn-full" disabled={loading}>
+                {loading ? 'Yuborilmoqda...' : "Davom etish"}
+              </button>
+              {error && <div className="status-msg err">{error}</div>}
+            </form>
+          </>
+        )}
+
+        {step === 'social' && (
+          <>
+            <h1 className="title">Bizga qo'shiling</h1>
+            <p className="subtitle">Yangiliklar va darslardan xabardor bo'lish uchun ijtimoiy tarmoqlarimizga obuna bo'ling.</p>
+            <a className="btn btn-primary btn-full" href="https://instagram.com/code_guard_" target="_blank" rel="noopener noreferrer" style={{ marginBottom: 12 }}>
+              📸 Instagram profiliga o'tish
+            </a>
+            <a className="btn btn-outline btn-full" href="https://t.me/CodeGuard_Academy" target="_blank" rel="noopener noreferrer" style={{ marginBottom: 20 }}>
+              💬 Telegram kanaliga o'tish
+            </a>
+            <button className="btn btn-primary btn-full" onClick={finish}>
+              Saytga kirish →
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
-  const [form, setForm] = useState({ fullName: '', phone: '', age: '', email: '', course: 'python', plan: 'free' });
+  const [onboarded, setOnboarded] = useState(null); // null = checking
+  const [theme, setTheme] = useState('auto');
+  const [form, setForm] = useState({ fullName: '', phone: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeService, setActiveService] = useState(null);
+  const [news, setNews] = useState([]);
+
+  useEffect(() => {
+    try {
+      setOnboarded(localStorage.getItem(ONBOARD_KEY) === '1');
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme) {
+        setTheme(savedTheme);
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      }
+    } catch {
+      setOnboarded(true);
+    }
+    fetch('/api/news')
+      .then((r) => r.json())
+      .then((d) => setNews(d.news || []))
+      .catch(() => {});
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // ignore
+    }
+  }
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -52,6 +203,11 @@ export default function HomePage() {
 
   async function submit(e) {
     e.preventDefault();
+    const validationError = validateRegistration(form);
+    if (validationError) {
+      setStatus({ type: 'err', text: validationError });
+      return;
+    }
     setLoading(true);
     setStatus(null);
     try {
@@ -63,12 +219,20 @@ export default function HomePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Xatolik yuz berdi');
       setStatus({ type: 'ok', text: "Ro'yxatdan muvaffaqiyatli o'tdingiz! Tez orada bog'lanamiz." });
-      setForm({ fullName: '', phone: '', age: '', email: '', course: 'python', plan: 'free' });
+      setForm({ fullName: '', phone: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
     } catch (err) {
       setStatus({ type: 'err', text: err.message });
     } finally {
       setLoading(false);
     }
+  }
+
+  if (onboarded === null) {
+    return <div className="page" />;
+  }
+
+  if (!onboarded) {
+    return <Onboarding onComplete={() => setOnboarded(true)} />;
   }
 
   return (
@@ -83,7 +247,12 @@ export default function HomePage() {
             <a href="#instagram">Instagram</a>
             <a href="/account">Akkaunt</a>
           </div>
-          <a href="#royxat" className="nav-cta">Ro'yxatdan o'tish</a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="theme-toggle" onClick={toggleTheme} aria-label="Rejimni almashtirish">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            <a href="#royxat" className="nav-cta">Ro'yxatdan o'tish</a>
+          </div>
         </div>
       </nav>
 
@@ -127,6 +296,29 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* NEWS */}
+      {news.length > 0 && (
+        <section className="section" style={{ paddingTop: 0, paddingBottom: 40 }}>
+          <div className="container">
+            <div className="section-head" style={{ marginBottom: 24 }}>
+              <div className="kicker">Yangiliklar</div>
+              <h2>So'nggi e'lonlar</h2>
+            </div>
+            <div className="grid grid-3">
+              {news.slice(0, 3).map((n) => (
+                <div className="card" key={n.id}>
+                  <h3>{n.title}</h3>
+                  <p>{n.body}</p>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    {new Date(n.created_at).toLocaleDateString('uz-UZ')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* COURSES */}
       <section className="section" id="kurslar">
@@ -266,12 +458,12 @@ export default function HomePage() {
           <div className="section-head">
             <div className="kicker">Ro'yxatdan o'tish</div>
             <h2>Ma'lumotlaringizni qoldiring</h2>
-            <p>Ism, telefon raqam, yosh va email orqali ro'yxatdan o'ting — murabbiylarimiz siz bilan bog'lanadi.</p>
+            <p>Ism, telefon raqam, yosh, email va kirish kodini kiriting — murabbiylarimiz siz bilan bog'lanadi.</p>
           </div>
-          <form className="form-shell" onSubmit={submit}>
+          <form className="form-shell" onSubmit={submit} noValidate>
             <div className="field">
               <label>Ism va familiya</label>
-              <input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} required />
+              <input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} />
             </div>
             <div className="field">
               <label>Telefon raqam</label>
@@ -279,16 +471,24 @@ export default function HomePage() {
                 placeholder="+998 90 123 45 67"
                 value={form.phone}
                 onChange={(e) => update('phone', e.target.value)}
-                required
               />
             </div>
             <div className="field">
               <label>Yosh</label>
-              <input type="number" min="5" max="100" value={form.age} onChange={(e) => update('age', e.target.value)} required />
+              <input type="number" min="5" max="100" value={form.age} onChange={(e) => update('age', e.target.value)} />
             </div>
             <div className="field">
               <label>Email manzil</label>
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} required />
+              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} />
+            </div>
+            <div className="field">
+              <label>Kirish kodi (4 raqam) — kabinetga kirish uchun</label>
+              <input
+                value={form.accessCode}
+                onChange={(e) => update('accessCode', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                inputMode="numeric"
+                maxLength={4}
+              />
             </div>
             <div className="field">
               <label>Kurs</label>
@@ -305,7 +505,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SOCIAL */}
+      {/* INSTAGRAM */}
       <section className="section" id="instagram">
         <div className="container" style={{ textAlign: 'center' }}>
           <div className="section-head">

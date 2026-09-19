@@ -20,13 +20,14 @@ const STORAGE_KEY = 'codeguard_account';
 export default function AccountPage() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [accessCode, setAccessCode] = useState('');
   const [remember, setRemember] = useState(true);
   const [student, setStudent] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [checkingSaved, setCheckingSaved] = useState(true);
 
-  async function lookup(phoneVal, emailVal) {
+  async function lookup(phoneVal, emailVal, codeVal) {
     setLoading(true);
     setError(null);
     setStudent(null);
@@ -34,7 +35,7 @@ export default function AccountPage() {
       const res = await fetch('/api/account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneVal, email: emailVal }),
+        body: JSON.stringify({ phone: phoneVal, email: emailVal, accessCode: codeVal }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Xatolik');
@@ -48,23 +49,21 @@ export default function AccountPage() {
     }
   }
 
-  // On first load, check the browser for previously saved phone+email
-  // (per-device convenience only — nothing is sent anywhere until this
-  // point, and it never leaves this browser).
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const { phone: savedPhone, email: savedEmail } = JSON.parse(saved);
+        const { phone: savedPhone, email: savedEmail, accessCode: savedCode } = JSON.parse(saved);
         setPhone(savedPhone || '');
         setEmail(savedEmail || '');
-        if (savedPhone && savedEmail) {
-          lookup(savedPhone, savedEmail).finally(() => setCheckingSaved(false));
+        setAccessCode(savedCode || '');
+        if (savedPhone && savedEmail && savedCode) {
+          lookup(savedPhone, savedEmail, savedCode).finally(() => setCheckingSaved(false));
           return;
         }
       }
     } catch {
-      // localStorage unavailable or corrupted — just fall through to the form
+      // ignore
     }
     setCheckingSaved(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,12 +71,12 @@ export default function AccountPage() {
 
   async function submit(e) {
     e.preventDefault();
-    const ok = await lookup(phone, email);
+    const ok = await lookup(phone, email, accessCode);
     if (ok && remember) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone, email }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone, email, accessCode }));
       } catch {
-        // ignore storage errors
+        // ignore
       }
     }
   }
@@ -91,6 +90,7 @@ export default function AccountPage() {
     setStudent(null);
     setPhone('');
     setEmail('');
+    setAccessCode('');
   }
 
   return (
@@ -108,7 +108,7 @@ export default function AccountPage() {
         ) : student ? (
           <div style={{ textAlign: 'left' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <div className="status-msg ok" style={{ margin: 0 }}>Ariza topildi</div>
+              <div className="status-msg ok" style={{ margin: 0 }}>Xush kelibsiz</div>
               <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 16px', fontSize: 13 }} onClick={logout}>
                 Chiqish
               </button>
@@ -141,9 +141,8 @@ export default function AccountPage() {
               <div className="panel" style={{ marginTop: 12, padding: 18 }}>
                 <p style={{ margin: '0 0 6px', fontWeight: 700 }}>📚 Black Woods kutubxonasi</p>
                 <p style={{ margin: 0, color: 'var(--muted)', fontSize: 13.5 }}>
-                  Sizning tarifingiz Black Woods (xalqaro kitoblar o'zbek tilida) kutubxonasidan bepul
-                  foydalanish huquqini beradi. Bu xizmat hozircha tayyorlanmoqda — tez orada shu yerda
-                  havola paydo bo'ladi.
+                  Sizning tarifingiz Black Woods kutubxonasidan bepul foydalanish huquqini beradi. Bu
+                  xizmat hozircha tayyorlanmoqda — tez orada shu yerda havola paydo bo'ladi.
                 </p>
               </div>
             )}
@@ -151,17 +150,26 @@ export default function AccountPage() {
         ) : (
           <>
             <p style={{ color: 'var(--muted)', fontSize: 13.5, marginBottom: 18 }}>
-              Ro'yxatdan o'tishda kiritgan telefon raqam va emailingizni kiriting — o'zingizning
-              ariza holatingizni ko'rasiz.
+              Ro'yxatdan o'tishda ko'rsatgan telefon raqamingiz, emailingiz va 4 xonali kirish
+              kodingizni kiriting.
             </p>
-            <form onSubmit={submit}>
+            <form onSubmit={submit} noValidate>
               <div className="field">
                 <label>Telefon raqam</label>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div className="field">
                 <label>Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>Kirish kodi (4 raqam)</label>
+                <input
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  inputMode="numeric"
+                  maxLength={4}
+                />
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 13.5, color: 'var(--muted)' }}>
                 <input
@@ -173,7 +181,7 @@ export default function AccountPage() {
                 Bu qurilmada eslab qolish
               </label>
               <button className="btn btn-primary btn-full" disabled={loading}>
-                {loading ? 'Tekshirilmoqda...' : "Ma'lumotlarimni ko'rish"}
+                {loading ? 'Tekshirilmoqda...' : 'Kirish'}
               </button>
               {error && <div className="status-msg err">{error}</div>}
             </form>

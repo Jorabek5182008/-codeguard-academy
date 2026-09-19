@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { addStudent, checkRateLimit } from '@/lib/db';
 import { getClientIp, isValidEmail, isValidPhone } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export async function POST(req) {
   const age = body.age ? Number(body.age) : null;
   const course = String(body.course || 'python').trim();
   const plan = String(body.plan || 'free').trim();
+  const accessCode = String(body.accessCode || '').trim();
 
   if (!fullName || fullName.length < 2) {
     return NextResponse.json({ error: "Ism-familiyani to'liq kiriting." }, { status: 400 });
@@ -34,7 +36,11 @@ export async function POST(req) {
   if (age !== null && (age < 5 || age > 100)) {
     return NextResponse.json({ error: "Yoshni to'g'ri kiriting." }, { status: 400 });
   }
+  if (!/^\d{4}$/.test(accessCode)) {
+    return NextResponse.json({ error: "Kirish kodi 4 ta raqamdan iborat bo'lishi kerak." }, { status: 400 });
+  }
 
-  const id = addStudent({ fullName, phone, age, email, course, plan });
+  const accessCodeHash = bcrypt.hashSync(accessCode, 10);
+  const id = addStudent({ fullName, phone, age, email, course, plan, accessCodeHash });
   return NextResponse.json({ ok: true, id });
 }

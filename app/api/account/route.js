@@ -1,28 +1,44 @@
 import { NextResponse } from 'next/server';
-import { findStudentByPhoneAndEmail, checkRateLimit } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+import { findStudentByPhoneAndEmail, checkLoginLock, recordLoginFailure, resetLoginFailures } from '@/lib/db';
 import { getClientIp } from '@/lib/utils';
 
-// Lightweight self-service lookup: a student proves they know the phone +
-// email they registered with. This is not full account authentication
-// (no password), so it only ever returns that one student's own
-// registration record — never a list, and it's rate limited per IP.
+// Student self-service login: phone + email + the 4-digit access code they
+// chose at registration. Same progressive-lockout protection as admin login.
 export async function POST(req) {
   const ip = getClientIp(req.headers);
-  const rl = checkRateLimit(`account:${ip}`, { windowSeconds: 60, max: 10 });
-  if (!rl.allowed) {
-    return NextResponse.json({ error: "Juda ko'p urinish." }, { status: 429 });
-  }
-
   const body = await req.json().catch(() => null);
   const phone = String(body?.phone || '').trim();
   const email = String(body?.email || '').trim();
-  if (!phone || !email) {
-    return NextResponse.json({ error: 'Telefon va email kiritilishi shart' }, { status: 400 });
+  const accessCode = String(body?.accessCode || '').trim();
+  const bucketKey = `account-login:${ip}:${phone}`;
+
+  const lock = checkLoginLock(bucketKey);
+  if (lock.locked) {
+    return NextResponse.json(
+      { error: `Juda ko'p noto'g'ri urinish. ${lock.remainingSeconds} soniyadan so'ng qayta urinib ko'ring.` },
+      { status: 429 }
+    );
+  }
+
+  if (!phone || !email || !accessCode) {
+    return NextResponse.json({ error: 'Telefon, email va kirish kodi kiritilishi shart' }, { status: 400 });
   }
 
   const student = findStudentByPhoneAndEmail(phone, email);
-  if (!student) {
-    return NextResponse.json({ error: "Bu ma'lumotlar bilan ro'yxat topilmadi." }, { status: 404 });
+  const valid = student?.access_code_hash && bcrypt.compareSync(accessCode, student.access_code_hash);
+
+  if (!valid) {
+    const result = recordLoginFailure(bucketKey);
+    if (result.locked) {
+      return NextResponse.json(
+        { error: `Noto'g'ri ma'lumot. Juda ko'p urinish — ${result.remainingSeconds} soniyaga bloklandingiz.` },
+        { status: 429 }
+      );
+    }
+    return NextResponse.json({ error: "Telefon, email yoki kirish kodi noto'g'ri." }, { status: 404 });
   }
+
+  resetLoginFailures(bucketKey);
   return NextResponse.json({ student });
 }
