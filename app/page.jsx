@@ -40,7 +40,6 @@ export default function HomePage() {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeService, setActiveService] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -77,27 +76,41 @@ export default function HomePage() {
       <nav className="navbar">
         <div className="container">
           <div className="brand">🐍 CodeGuard<span className="dot">.</span></div>
-          <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
-            <a href="#kurslar" onClick={() => setMenuOpen(false)}>Kurslar</a>
-            <a href="#xizmatlar" onClick={() => setMenuOpen(false)}>Xizmatlar</a>
-            <a href="#tolov" onClick={() => setMenuOpen(false)}>Tariflar</a>
-            <a href="#instagram" onClick={() => setMenuOpen(false)}>Instagram</a>
-            <a href="/account" onClick={() => setMenuOpen(false)}>Akkaunt</a>
-            <a href="#royxat" className="nav-cta-mobile" onClick={() => setMenuOpen(false)}>Ro'yxatdan o'tish</a>
+          <div className="nav-links">
+            <a href="#kurslar">Kurslar</a>
+            <a href="#xizmatlar">Xizmatlar</a>
+            <a href="#tolov">Tariflar</a>
+            <a href="#instagram">Instagram</a>
+            <a href="/account">Akkaunt</a>
           </div>
           <a href="#royxat" className="nav-cta">Ro'yxatdan o'tish</a>
-          <button
-            className="nav-burger"
-            aria-label="Menyu"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
         </div>
       </nav>
-      {menuOpen && <div className="nav-overlay" onClick={() => setMenuOpen(false)} />}
+
+      {/* MOBILE BOTTOM NAV */}
+      <div className="bottom-nav">
+        <a href="#top" className="bottom-nav-item active">
+          <span className="bottom-nav-icon">🏠</span>
+          <span>Bosh sahifa</span>
+        </a>
+        <a href="#kurslar" className="bottom-nav-item">
+          <span className="bottom-nav-icon">📚</span>
+          <span>Kurslar</span>
+        </a>
+        <a href="#royxat" className="bottom-nav-item bottom-nav-cta">
+          <span className="bottom-nav-icon">✍️</span>
+          <span>Yozilish</span>
+        </a>
+        <a href="#tolov" className="bottom-nav-item">
+          <span className="bottom-nav-icon">💳</span>
+          <span>Tariflar</span>
+        </a>
+        <a href="/account" className="bottom-nav-item">
+          <span className="bottom-nav-icon">👤</span>
+          <span>Akkaunt</span>
+        </a>
+      </div>
+      <div id="top" />
 
       {/* HERO */}
       <section className="hero">
