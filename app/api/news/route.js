@@ -13,11 +13,12 @@ export async function POST(req) {
   const body = await req.json().catch(() => null);
   const title = String(body?.title || '').trim();
   const text = String(body?.body || '').trim();
+  const coverImage = body?.coverImage ? String(body.coverImage).trim() : null;
   if (!title || !text) {
     return NextResponse.json({ error: "Sarlavha va matn to'ldirilishi shart" }, { status: 400 });
   }
 
-  const id = addNews({ title, body: text });
+  const id = addNews({ title, body: text, coverImage });
   return NextResponse.json({ ok: true, id });
 }
 

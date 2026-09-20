@@ -2,6 +2,22 @@
 
 import { useState, useEffect } from 'react';
 
+function PhoneInput({ value, onChange }) {
+  return (
+    <div className="phone-input">
+      <span className="phone-prefix">+998</span>
+      <input
+        type="tel"
+        inputMode="numeric"
+        placeholder="90 123 45 67"
+        maxLength={9}
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 9))}
+      />
+    </div>
+  );
+}
+
 const STATUS_LABELS = {
   new: 'Yangi ariza',
   contacted: "Siz bilan bog'lanildi",
@@ -18,7 +34,7 @@ const PAID_PLANS = ['basic', 'pro'];
 const STORAGE_KEY = 'codeguard_account';
 
 export default function AccountPage() {
-  const [phone, setPhone] = useState('');
+  const [phoneDigits, setPhoneDigits] = useState('');
   const [email, setEmail] = useState('');
   const [accessCode, setAccessCode] = useState('');
   const [remember, setRemember] = useState(true);
@@ -53,12 +69,12 @@ export default function AccountPage() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const { phone: savedPhone, email: savedEmail, accessCode: savedCode } = JSON.parse(saved);
-        setPhone(savedPhone || '');
+        const { phoneDigits: savedPhone, email: savedEmail, accessCode: savedCode } = JSON.parse(saved);
+        setPhoneDigits(savedPhone || '');
         setEmail(savedEmail || '');
         setAccessCode(savedCode || '');
         if (savedPhone && savedEmail && savedCode) {
-          lookup(savedPhone, savedEmail, savedCode).finally(() => setCheckingSaved(false));
+          lookup(`+998${savedPhone}`, savedEmail, savedCode).finally(() => setCheckingSaved(false));
           return;
         }
       }
@@ -71,10 +87,11 @@ export default function AccountPage() {
 
   async function submit(e) {
     e.preventDefault();
-    const ok = await lookup(phone, email, accessCode);
+    const fullPhone = `+998${phoneDigits}`;
+    const ok = await lookup(fullPhone, email, accessCode);
     if (ok && remember) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone, email, accessCode }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ phoneDigits, email, accessCode }));
       } catch {
         // ignore
       }
@@ -88,7 +105,7 @@ export default function AccountPage() {
       // ignore
     }
     setStudent(null);
-    setPhone('');
+    setPhoneDigits('');
     setEmail('');
     setAccessCode('');
   }
@@ -156,7 +173,7 @@ export default function AccountPage() {
             <form onSubmit={submit} noValidate>
               <div className="field">
                 <label>Telefon raqam</label>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <PhoneInput value={phoneDigits} onChange={setPhoneDigits} />
               </div>
               <div className="field">
                 <label>Email</label>

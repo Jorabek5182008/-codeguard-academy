@@ -25,6 +25,8 @@ export default function AdminDashboard() {
   const [news, setNews] = useState(null);
   const [newsTitle, setNewsTitle] = useState('');
   const [newsBody, setNewsBody] = useState('');
+  const [newsCover, setNewsCover] = useState(null);
+  const [newsCoverUploading, setNewsCoverUploading] = useState(false);
   const [newsSaving, setNewsSaving] = useState(false);
   const router = useRouter();
 
@@ -82,6 +84,21 @@ export default function AdminDashboard() {
     URL.revokeObjectURL(url);
   }
 
+  async function uploadCover(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewsCoverUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok) setNewsCover(data.url);
+    } finally {
+      setNewsCoverUploading(false);
+    }
+  }
+
   async function submitNews(e) {
     e.preventDefault();
     setNewsSaving(true);
@@ -89,10 +106,11 @@ export default function AdminDashboard() {
       await fetch('/api/news', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newsTitle, body: newsBody }),
+        body: JSON.stringify({ title: newsTitle, body: newsBody, coverImage: newsCover }),
       });
       setNewsTitle('');
       setNewsBody('');
+      setNewsCover(null);
       loadNews();
     } finally {
       setNewsSaving(false);
@@ -247,7 +265,15 @@ export default function AdminDashboard() {
                 }}
               />
             </div>
-            <button className="btn btn-primary" disabled={newsSaving}>
+            <div className="field">
+              <label>Muqova rasm (ixtiyoriy, JPG/PNG/WEBP, 5MB gacha)</label>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadCover} />
+              {newsCoverUploading && <p style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 6 }}>Yuklanmoqda...</p>}
+              {newsCover && (
+                <img src={newsCover} alt="Muqova" style={{ marginTop: 10, maxWidth: 160, borderRadius: 10 }} />
+              )}
+            </div>
+            <button className="btn btn-primary" disabled={newsSaving || newsCoverUploading}>
               {newsSaving ? 'Saqlanmoqda...' : "Yangilik qo'shish"}
             </button>
           </form>
@@ -258,7 +284,10 @@ export default function AdminDashboard() {
             {news?.map((n) => (
               <div key={n.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                  <div>
+                  {n.cover_image && (
+                    <img src={n.cover_image} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+                  )}
+                  <div style={{ flex: 1 }}>
                     <strong>{n.title}</strong>
                     <p style={{ color: 'var(--muted)', fontSize: 14, margin: '6px 0 0' }}>{n.body}</p>
                     <span style={{ fontSize: 12, color: 'var(--muted)' }}>

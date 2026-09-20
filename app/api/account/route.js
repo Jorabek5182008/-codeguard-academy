@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { findStudentByPhoneAndEmail, checkLoginLock, recordLoginFailure, resetLoginFailures } from '@/lib/db';
-import { getClientIp } from '@/lib/utils';
+import { getClientIp, normalizeUzPhone } from '@/lib/utils';
 
 // Student self-service login: phone + email + the 4-digit access code they
 // chose at registration. Same progressive-lockout protection as admin login.
 export async function POST(req) {
   const ip = getClientIp(req.headers);
   const body = await req.json().catch(() => null);
-  const phone = String(body?.phone || '').trim();
+  const phone = normalizeUzPhone(body?.phone);
   const email = String(body?.email || '').trim();
   const accessCode = String(body?.accessCode || '').trim();
-  const bucketKey = `account-login:${ip}:${phone}`;
+  const bucketKey = `account-login:${ip}:${phone || body?.phone || ''}`;
 
   const lock = checkLoginLock(bucketKey);
   if (lock.locked) {

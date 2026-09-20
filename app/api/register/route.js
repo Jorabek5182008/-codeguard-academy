@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { addStudent, checkRateLimit } from '@/lib/db';
-import { getClientIp, isValidEmail, isValidPhone } from '@/lib/utils';
+import { getClientIp, isValidEmail, normalizeUzPhone } from '@/lib/utils';
 
 export async function POST(req) {
   const ip = getClientIp(req.headers);
@@ -17,7 +17,7 @@ export async function POST(req) {
   if (!body) return NextResponse.json({ error: "Noto'g'ri so'rov" }, { status: 400 });
 
   const fullName = String(body.fullName || '').trim();
-  const phone = String(body.phone || '').trim();
+  const phone = normalizeUzPhone(body.phone);
   const email = String(body.email || '').trim();
   const age = body.age ? Number(body.age) : null;
   const course = String(body.course || 'python').trim();
@@ -27,8 +27,8 @@ export async function POST(req) {
   if (!fullName || fullName.length < 2) {
     return NextResponse.json({ error: "Ism-familiyani to'liq kiriting." }, { status: 400 });
   }
-  if (!isValidPhone(phone)) {
-    return NextResponse.json({ error: "Telefon raqamini to'g'ri kiriting." }, { status: 400 });
+  if (!phone) {
+    return NextResponse.json({ error: "Telefon raqamini to'liq, 9 ta raqam kiriting." }, { status: 400 });
   }
   if (!isValidEmail(email)) {
     return NextResponse.json({ error: "Email manzilini to'g'ri kiriting." }, { status: 400 });

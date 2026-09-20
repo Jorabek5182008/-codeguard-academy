@@ -35,130 +35,36 @@ const SERVICE_DETAILS = {
   },
 };
 
-const ONBOARD_KEY = 'codeguard_onboarded';
 const THEME_KEY = 'codeguard_theme';
 
 function validateRegistration(f) {
   if (!f.fullName || f.fullName.trim().length < 2) return "Ism-familiyani to'liq kiriting.";
-  if (!/^[+\d][\d\s-]{6,16}$/.test(f.phone || '')) return "Telefon raqamini to'g'ri kiriting.";
+  if (!/^\d{9}$/.test(f.phoneDigits || '')) return "Telefon raqamini to'liq, 9 ta raqam kiriting.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email || '')) return "Email manzilini to'g'ri kiriting.";
   if (!f.age || f.age < 5 || f.age > 100) return "Yoshni to'g'ri kiriting.";
   if (!/^\d{4}$/.test(f.accessCode || '')) return "Kirish kodi 4 ta raqamdan iborat bo'lishi kerak.";
   return null;
 }
 
-function Onboarding({ onComplete }) {
-  const [step, setStep] = useState('register'); // register | social
-  const [form, setForm] = useState({ fullName: '', phone: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  function update(key, value) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  async function submitRegistration(e) {
-    e.preventDefault();
-    const validationError = validateRegistration(form);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Xatolik yuz berdi');
-      setStep('social');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function finish() {
-    try {
-      localStorage.setItem(ONBOARD_KEY, '1');
-    } catch {
-      // ignore
-    }
-    onComplete();
-  }
-
+function PhoneInput({ value, onChange }) {
   return (
-    <div className="page onboard-page">
-      <div className="card" style={{ maxWidth: 440 }}>
-        <div className="logo-emoji">🐍</div>
-        <div className="university-name">CodeGuard Academy</div>
-
-        {step === 'register' && (
-          <>
-            <h1 className="title">Boshlash uchun ro'yxatdan o'ting</h1>
-            <p className="subtitle">Ism, telefon, yosh, email va o'zingiz tanlagan 4 xonali kirish kodini kiriting.</p>
-            <form onSubmit={submitRegistration} noValidate>
-              <div className="field">
-                <label>Ism va familiya</label>
-                <input value={form.fullName} onChange={(e) => update('fullName', e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Telefon raqam</label>
-                <input placeholder="+998 90 123 45 67" value={form.phone} onChange={(e) => update('phone', e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Yosh</label>
-                <input type="number" value={form.age} onChange={(e) => update('age', e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Email manzil</label>
-                <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Kirish kodi (4 raqam) — kabinetga kirish uchun kerak bo'ladi</label>
-                <input
-                  value={form.accessCode}
-                  onChange={(e) => update('accessCode', e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  inputMode="numeric"
-                  maxLength={4}
-                />
-              </div>
-              <button className="btn btn-primary btn-full" disabled={loading}>
-                {loading ? 'Yuborilmoqda...' : "Davom etish"}
-              </button>
-              {error && <div className="status-msg err">{error}</div>}
-            </form>
-          </>
-        )}
-
-        {step === 'social' && (
-          <>
-            <h1 className="title">Bizga qo'shiling</h1>
-            <p className="subtitle">Yangiliklar va darslardan xabardor bo'lish uchun ijtimoiy tarmoqlarimizga obuna bo'ling.</p>
-            <a className="btn btn-primary btn-full" href="https://instagram.com/code_guard_" target="_blank" rel="noopener noreferrer" style={{ marginBottom: 12 }}>
-              📸 Instagram profiliga o'tish
-            </a>
-            <a className="btn btn-outline btn-full" href="https://t.me/CodeGuard_Academy" target="_blank" rel="noopener noreferrer" style={{ marginBottom: 20 }}>
-              💬 Telegram kanaliga o'tish
-            </a>
-            <button className="btn btn-primary btn-full" onClick={finish}>
-              Saytga kirish →
-            </button>
-          </>
-        )}
-      </div>
+    <div className="phone-input">
+      <span className="phone-prefix">+998</span>
+      <input
+        type="tel"
+        inputMode="numeric"
+        placeholder="90 123 45 67"
+        maxLength={9}
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 9))}
+      />
     </div>
   );
 }
 
 export default function HomePage() {
-  const [onboarded, setOnboarded] = useState(null); // null = checking
   const [theme, setTheme] = useState('auto');
-  const [form, setForm] = useState({ fullName: '', phone: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
+  const [form, setForm] = useState({ fullName: '', phoneDigits: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeService, setActiveService] = useState(null);
@@ -166,14 +72,13 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
-      setOnboarded(localStorage.getItem(ONBOARD_KEY) === '1');
       const savedTheme = localStorage.getItem(THEME_KEY);
       if (savedTheme) {
         setTheme(savedTheme);
         document.documentElement.setAttribute('data-theme', savedTheme);
       }
     } catch {
-      setOnboarded(true);
+      // ignore
     }
     fetch('/api/news')
       .then((r) => r.json())
@@ -214,25 +119,17 @@ export default function HomePage() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, phone: `+998${form.phoneDigits}` }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Xatolik yuz berdi');
       setStatus({ type: 'ok', text: "Ro'yxatdan muvaffaqiyatli o'tdingiz! Tez orada bog'lanamiz." });
-      setForm({ fullName: '', phone: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
+      setForm({ fullName: '', phoneDigits: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
     } catch (err) {
       setStatus({ type: 'err', text: err.message });
     } finally {
       setLoading(false);
     }
-  }
-
-  if (onboarded === null) {
-    return <div className="page" />;
-  }
-
-  if (!onboarded) {
-    return <Onboarding onComplete={() => setOnboarded(true)} />;
   }
 
   return (
@@ -242,6 +139,7 @@ export default function HomePage() {
           <div className="brand">🐍 CodeGuard<span className="dot">.</span></div>
           <div className="nav-links">
             <a href="#kurslar">Kurslar</a>
+            <a href="/news">Yangiliklar</a>
             <a href="#xizmatlar">Xizmatlar</a>
             <a href="#tolov">Tariflar</a>
             <a href="#instagram">Instagram</a>
@@ -299,7 +197,7 @@ export default function HomePage() {
 
       {/* NEWS */}
       {news.length > 0 && (
-        <section className="section" style={{ paddingTop: 0, paddingBottom: 40 }}>
+        <section className="section" style={{ paddingTop: 0, paddingBottom: 40 }} id="yangiliklar">
           <div className="container">
             <div className="section-head" style={{ marginBottom: 24 }}>
               <div className="kicker">Yangiliklar</div>
@@ -307,15 +205,21 @@ export default function HomePage() {
             </div>
             <div className="grid grid-3">
               {news.slice(0, 3).map((n) => (
-                <div className="card" key={n.id}>
+                <a className="card news-card" key={n.id} href={`/news/${n.slug}`}>
+                  {n.cover_image && <img src={n.cover_image} alt="" className="news-card-cover" />}
                   <h3>{n.title}</h3>
-                  <p>{n.body}</p>
+                  <p>{n.body.slice(0, 90)}{n.body.length > 90 ? '...' : ''}</p>
                   <span style={{ fontSize: 12, color: 'var(--muted)' }}>
                     {new Date(n.created_at).toLocaleDateString('uz-UZ')}
                   </span>
-                </div>
+                </a>
               ))}
             </div>
+            {news.length > 3 && (
+              <div style={{ textAlign: 'center', marginTop: 24 }}>
+                <a href="/news" className="btn btn-outline">Barcha yangiliklar</a>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -467,11 +371,7 @@ export default function HomePage() {
             </div>
             <div className="field">
               <label>Telefon raqam</label>
-              <input
-                placeholder="+998 90 123 45 67"
-                value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
-              />
+              <PhoneInput value={form.phoneDigits} onChange={(v) => update('phoneDigits', v)} />
             </div>
             <div className="field">
               <label>Yosh</label>
@@ -500,7 +400,21 @@ export default function HomePage() {
             <button className="btn btn-primary btn-full" disabled={loading}>
               {loading ? 'Yuborilmoqda...' : "Ro'yxatdan o'tish"}
             </button>
-            {status && <div className={`status-msg ${status.type === 'ok' ? 'ok' : 'err'}`}>{status.text}</div>}
+            {status && (
+              <div className={`status-msg ${status.type === 'ok' ? 'ok' : 'err'}`}>
+                {status.text}
+                {status.type === 'ok' && (
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                    <a className="btn btn-outline" style={{ flex: 1, padding: '10px', fontSize: 13 }} href="https://instagram.com/code_guard_" target="_blank" rel="noopener noreferrer">
+                      📸 Instagram
+                    </a>
+                    <a className="btn btn-outline" style={{ flex: 1, padding: '10px', fontSize: 13 }} href="https://t.me/CodeGuard_Academy" target="_blank" rel="noopener noreferrer">
+                      💬 Telegram
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
           </form>
         </div>
       </section>
