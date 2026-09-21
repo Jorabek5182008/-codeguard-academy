@@ -1,5 +1,6 @@
 import { getNewsBySlug } from '@/lib/db';
 import { notFound } from 'next/navigation';
+import SiteNav from '@/components/SiteNav';
 
 export async function generateMetadata({ params }) {
   const n = getNewsBySlug(params.slug);
@@ -12,7 +13,8 @@ export default function NewsDetailPage({ params }) {
 
   return (
     <div className="page-shell">
-      <div className="container" style={{ maxWidth: 760, paddingTop: 100, paddingBottom: 80 }}>
+      <SiteNav />
+      <div className="container" style={{ maxWidth: 760, paddingTop: 40, paddingBottom: 80 }}>
         <a href="/news" className="btn btn-outline" style={{ display: 'inline-block', marginBottom: 24 }}>
           ← Barcha yangiliklar
         </a>

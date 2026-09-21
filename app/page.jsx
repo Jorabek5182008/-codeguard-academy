@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SiteNav from '@/components/SiteNav';
 
 const SERVICE_DETAILS = {
   live: {
@@ -35,8 +36,6 @@ const SERVICE_DETAILS = {
   },
 };
 
-const THEME_KEY = 'codeguard_theme';
-
 function validateRegistration(f) {
   if (!f.fullName || f.fullName.trim().length < 2) return "Ism-familiyani to'liq kiriting.";
   if (!/^\d{9}$/.test(f.phoneDigits || '')) return "Telefon raqamini to'liq, 9 ta raqam kiriting.";
@@ -63,7 +62,6 @@ function PhoneInput({ value, onChange }) {
 }
 
 export default function HomePage() {
-  const [theme, setTheme] = useState('auto');
   const [form, setForm] = useState({ fullName: '', phoneDigits: '', age: '', email: '', accessCode: '', course: 'python', plan: 'free' });
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -71,31 +69,11 @@ export default function HomePage() {
   const [news, setNews] = useState([]);
 
   useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem(THEME_KEY);
-      if (savedTheme) {
-        setTheme(savedTheme);
-        document.documentElement.setAttribute('data-theme', savedTheme);
-      }
-    } catch {
-      // ignore
-    }
     fetch('/api/news')
       .then((r) => r.json())
       .then((d) => setNews(d.news || []))
       .catch(() => {});
   }, []);
-
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      // ignore
-    }
-  }
 
   function update(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -134,49 +112,7 @@ export default function HomePage() {
 
   return (
     <>
-      <nav className="navbar">
-        <div className="container">
-          <div className="brand">🐍 CodeGuard<span className="dot">.</span></div>
-          <div className="nav-links">
-            <a href="#kurslar">Kurslar</a>
-            <a href="/news">Yangiliklar</a>
-            <a href="#xizmatlar">Xizmatlar</a>
-            <a href="#tolov">Tariflar</a>
-            <a href="#instagram">Instagram</a>
-            <a href="/account">Akkaunt</a>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="theme-toggle" onClick={toggleTheme} aria-label="Rejimni almashtirish">
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
-            <a href="#royxat" className="nav-cta">Ro'yxatdan o'tish</a>
-          </div>
-        </div>
-      </nav>
-
-      {/* MOBILE BOTTOM NAV */}
-      <div className="bottom-nav">
-        <a href="#top" className="bottom-nav-item active">
-          <span className="bottom-nav-icon">🏠</span>
-          <span>Bosh sahifa</span>
-        </a>
-        <a href="#kurslar" className="bottom-nav-item">
-          <span className="bottom-nav-icon">📚</span>
-          <span>Kurslar</span>
-        </a>
-        <a href="#royxat" className="bottom-nav-item bottom-nav-cta">
-          <span className="bottom-nav-icon">✍️</span>
-          <span>Yozilish</span>
-        </a>
-        <a href="#tolov" className="bottom-nav-item">
-          <span className="bottom-nav-icon">💳</span>
-          <span>Tariflar</span>
-        </a>
-        <a href="/account" className="bottom-nav-item">
-          <span className="bottom-nav-icon">👤</span>
-          <span>Akkaunt</span>
-        </a>
-      </div>
+      <SiteNav />
       <div id="top" />
 
       {/* HERO */}

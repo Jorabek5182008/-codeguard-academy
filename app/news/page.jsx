@@ -1,4 +1,5 @@
 import { listNews } from '@/lib/db';
+import SiteNav from '@/components/SiteNav';
 
 export const metadata = {
   title: 'Yangiliklar — CodeGuard Academy',
@@ -9,7 +10,8 @@ export default function NewsListPage() {
 
   return (
     <div className="page-shell">
-      <div className="container" style={{ paddingTop: 100, paddingBottom: 80 }}>
+      <SiteNav />
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
         <div className="section-head" style={{ marginBottom: 32 }}>
           <div className="kicker">CodeGuard Academy</div>
           <h2>Barcha yangiliklar</h2>
