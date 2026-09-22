@@ -47,6 +47,7 @@ export default function SiteNav() {
             <a href="/account">Akkaunt</a>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <a href="/search" className="theme-toggle" aria-label="Qidiruv">🔍</a>
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Rejimni almashtirish">
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
