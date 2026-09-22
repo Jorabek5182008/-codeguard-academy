@@ -42,7 +42,7 @@ export default function SiteNav() {
             <a href="/courses">Kurslar</a>
             <a href="/news">Yangiliklar</a>
             <a href="/#xizmatlar">Xizmatlar</a>
-            <a href="/#tolov">Tariflar</a>
+            <a href="/pricing">Tariflar</a>
             <a href="/#instagram">Instagram</a>
             <a href="/account">Akkaunt</a>
           </div>
@@ -70,7 +70,7 @@ export default function SiteNav() {
           <span className="bottom-nav-icon">✍️</span>
           <span>Yozilish</span>
         </a>
-        <a href="/#tolov" className="bottom-nav-item">
+        <a href="/pricing" className="bottom-nav-item">
           <span className="bottom-nav-icon">💳</span>
           <span>Tariflar</span>
         </a>
