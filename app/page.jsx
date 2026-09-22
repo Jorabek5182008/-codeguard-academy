@@ -73,6 +73,22 @@ export default function HomePage() {
       .then((r) => r.json())
       .then((d) => setNews(d.news || []))
       .catch(() => {});
+
+    // Coming from a course detail page ("Kursni boshlash" → /?course=..&plan=..#royxat):
+    // preselect the registration form and scroll to it.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const courseParam = params.get('course');
+      const planParam = params.get('plan');
+      if (courseParam) {
+        setForm((f) => ({ ...f, course: courseParam, plan: planParam || f.plan }));
+        setTimeout(() => {
+          document.getElementById('royxat')?.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
   function update(key, value) {
@@ -178,6 +194,9 @@ export default function HomePage() {
                 <button className="btn btn-primary btn-full" onClick={() => selectPlan('ai', 'free')}>
                   Bepul yozilish
                 </button>
+                <a href="/courses/ai-kirish-darsi" className="read-more" style={{ display: 'block', marginTop: 10, textAlign: 'center' }}>
+                  Batafsil →
+                </a>
               </div>
             </div>
             <div className="card">
@@ -188,6 +207,9 @@ export default function HomePage() {
                 <button className="btn btn-outline btn-full" onClick={() => selectPlan('python', 'basic')}>
                   Kursga yozilish
                 </button>
+                <a href="/courses/python-boshlangich" className="read-more" style={{ display: 'block', marginTop: 10, textAlign: 'center' }}>
+                  Batafsil →
+                </a>
               </div>
             </div>
             <div className="card">
@@ -198,6 +220,9 @@ export default function HomePage() {
                 <button className="btn btn-outline btn-full" onClick={() => selectPlan('python', 'pro')}>
                   Kursga yozilish
                 </button>
+                <a href="/courses/python-amaliy-loyihalar" className="read-more" style={{ display: 'block', marginTop: 10, textAlign: 'center' }}>
+                  Batafsil →
+                </a>
               </div>
             </div>
           </div>

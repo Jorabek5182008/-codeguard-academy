@@ -39,7 +39,7 @@ export default function SiteNav() {
         <div className="container">
           <a href="/" className="brand">🐍 CodeGuard<span className="dot">.</span></a>
           <div className="nav-links">
-            <a href="/#kurslar">Kurslar</a>
+            <a href="/courses">Kurslar</a>
             <a href="/news">Yangiliklar</a>
             <a href="/#xizmatlar">Xizmatlar</a>
             <a href="/#tolov">Tariflar</a>
@@ -61,7 +61,7 @@ export default function SiteNav() {
           <span className="bottom-nav-icon">🏠</span>
           <span>Bosh sahifa</span>
         </a>
-        <a href="/#kurslar" className="bottom-nav-item">
+        <a href="/courses" className="bottom-nav-item">
           <span className="bottom-nav-icon">📚</span>
           <span>Kurslar</span>
         </a>
