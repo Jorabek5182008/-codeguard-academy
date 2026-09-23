@@ -43,6 +43,7 @@ export default function SiteNav() {
             <a href="/news">Yangiliklar</a>
             <a href="/#xizmatlar">Xizmatlar</a>
             <a href="/pricing">Tariflar</a>
+            <a href="/academy">Akademiya</a>
             <a href="/#instagram">Instagram</a>
             <a href="/account">Akkaunt</a>
           </div>
